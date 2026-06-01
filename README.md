@@ -17,28 +17,30 @@ python3 -m http.server 8000
 
 Vagy tedd fel **GitHub Pages**-re (Settings → Pages → Branch), és bárhonnan elérhető lesz egy linken.
 
-## Kiosztás
+## Kiosztás — kétkezes (split)
 
-A billentyűzet úgy van leképezve, mint egy igazi zongora: az **`A`** billentyű a C alaphang,
-a fölötte lévő **`W`** a félhang (C#), és így tovább felfelé.
+A billentyűzet két regiszterre van osztva, hogy mindkét kézzel egyszerre játszhass,
+oktávváltogatás nélkül — mint egy igazi zongorán:
 
 ```
-Fekete (módosított) hangok – felső sor:
-   W   E       T   Z   U       O   P       Ő
- A   S   D   F   G   H   J   K   L   É   Á   Ű
-Fehér hangok – középső sor (C-től G-ig)
+ DALLAM · jobb kéz · felső két sor (bázis C4)
+   1   2       4   5   6       8   9       Ö      ← fekete hangok (számsor)
+ Q   W   E   R   T   Z   U   I   O   P   Ő   Ú    ← fehér hangok (QWERTZ-sor)
+
+ BASSZUS · bal kéz · alsó két sor (bázis C3)
+   S   D       G   H   J       L   É            ← fekete hangok (ASDF-sor)
+ Í   Y   X   C   V   B   N   M   ,   .   -        ← fehér hangok (alsó sor)
 ```
 
-- **Fehér billentyűk:** `A S D F G H J K L É Á Ű` (12 db)
-- **Fekete billentyűk:** `W E T Z U O P Ő` (8 db)
-- **Oktávváltás:** `←` / `→` nyilak (vagy a `−` / `+` gombok)
+- **Jobb kéz (dallam):** fehér hangok a `QWERTZ` soron, fekete hangok a számsoron.
+- **Bal kéz (basszus):** fehér hangok az alsó (`ÍYXCV…`) soron, fekete hangok az `ASDF` soron.
+- **Sustain pedál:** `Space` — amíg nyomod, a felengedett hangok tovább csengenek
+  (vagy kattints a „🦶 Space" gombra, hogy rögzítsd — hasznos érintőképernyőn).
+- **Globális oktávváltás:** `←` / `→` nyilak (vagy a `−` / `+` gombok), ±3 oktáv.
 - Egyszerre több billentyű is leüthető (polifónia), így akkordokat is játszhatsz.
 
-### Hány oktáv ez?
-
-Az `A`-tól `Ű`-ig terjedő 12 fehér billentyű a C-dúr skála 12 hangja, ami **1 oktáv + egy kvint**,
-vagyis kb. **1,7 oktáv** (C4-től G5-ig). A fekete hangokkal együtt összesen **20 hang** szól.
-Ha többre van szükséged, az `←` / `→` nyilakkal ±3 oktávot tolhatsz a kiosztáson.
+A két zóna egy oktáv eltéréssel szól (basszus C3-tól, dallam C4-től), és a középső
+regiszterben átfednek, így folyamatos skálát is játszhatsz a két kéz között.
 
 ## Funkciók
 
