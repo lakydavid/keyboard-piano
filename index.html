@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Billentyűzet Zongora 🎹</title>
+<style>
+  :root {
+    --bg1: #1a1c2c;
+    --bg2: #2a2d4a;
+    --accent: #ffcb6b;
+    --accent2: #82aaff;
+    --white-key: #f5f5fa;
+    --white-key-active: #ffcb6b;
+    --black-key: #23252f;
+    --black-key-active: #82aaff;
+    --text: #e7e9f0;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    color: var(--text);
+    background: radial-gradient(circle at 50% -10%, var(--bg2), var(--bg1) 70%);
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 48px;
+    gap: 22px;
+  }
+  header { text-align: center; }
+  h1 {
+    margin: 0 0 6px;
+    font-size: clamp(24px, 4vw, 38px);
+    letter-spacing: 0.5px;
+  }
+  h1 .em { color: var(--accent); }
+  .subtitle { margin: 0; opacity: 0.7; font-size: 14px; }
+
+  /* ---- Vezérlőpanel ---- */
+  .panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    justify-content: center;
+    align-items: flex-end;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 16px 22px;
+    backdrop-filter: blur(6px);
+    max-width: 980px;
+    width: 100%;
+  }
+  .control { display: flex; flex-direction: column; gap: 8px; }
+  .control > label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.65;
+  }
+  .presets { display: flex; flex-wrap: wrap; gap: 8px; }
+  .preset-btn {
+    cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.05);
+    color: var(--text);
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    transition: all 0.15s ease;
+  }
+  .preset-btn:hover { background: rgba(255,255,255,0.12); }
+  .preset-btn.active {
+    background: var(--accent);
+    color: #1a1c2c;
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  .slider-wrap { display: flex; align-items: center; gap: 10px; }
+  input[type="range"] { width: 130px; accent-color: var(--accent2); cursor: pointer; }
+  .value { font-variant-numeric: tabular-nums; width: 42px; text-align: right; opacity: 0.85; font-size: 13px; }
+  .octave-ctrl { display: flex; align-items: center; gap: 10px; }
+  .oct-btn {
+    cursor: pointer;
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.05);
+    color: var(--text);
+    font-size: 18px;
+    line-height: 1;
+  }
+  .oct-btn:hover { background: rgba(255,255,255,0.12); }
+  .oct-display { min-width: 64px; text-align: center; font-size: 14px; }
+
+  /* ---- Zongora ---- */
+  .piano-scroll { width: 100%; overflow-x: auto; padding-bottom: 8px; }
+  .piano {
+    position: relative;
+    display: flex;
+    margin: 0 auto;
+    width: max-content;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+  }
+  .white-key {
+    position: relative;
+    width: 56px;
+    height: 220px;
+    background: linear-gradient(to bottom, #ffffff, var(--white-key));
+    border: 1px solid #c4c4d0;
+    border-radius: 0 0 7px 7px;
+    margin-right: -1px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    padding-bottom: 10px;
+    cursor: pointer;
+    box-shadow: inset 0 -6px 10px rgba(0,0,0,0.12);
+    transition: background 0.05s, transform 0.02s;
+  }
+  .white-key.active {
+    background: linear-gradient(to bottom, #ffe6a8, var(--white-key-active));
+    transform: translateY(2px);
+    box-shadow: inset 0 -4px 8px rgba(0,0,0,0.18);
+  }
+  .black-key {
+    position: absolute;
+    top: 0;
+    width: 36px;
+    height: 138px;
+    background: linear-gradient(to bottom, #3a3d4d, var(--black-key));
+    border: 1px solid #000;
+    border-radius: 0 0 5px 5px;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    padding-bottom: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+    transition: background 0.05s, transform 0.02s;
+  }
+  .black-key.active {
+    background: linear-gradient(to bottom, #5e7bd6, var(--black-key-active));
+    transform: translateY(2px);
+  }
+  .key-label {
+    font-size: 13px;
+    font-weight: 700;
+    pointer-events: none;
+  }
+  .white-key .key-label { color: #5a5a6e; }
+  .black-key .key-label { color: #e7e9f0; }
+  .note-label {
+    font-size: 10px;
+    opacity: 0.5;
+    pointer-events: none;
+    margin-top: 2px;
+  }
+  .white-key .note-label { color: #8a8a9e; }
+  .black-key .note-label { color: #b9c2e0; }
+
+  footer {
+    max-width: 760px;
+    text-align: center;
+    font-size: 13px;
+    line-height: 1.6;
+    opacity: 0.7;
+  }
+  footer kbd {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 12px;
+  }
+  .hint { font-size: 12px; opacity: 0.55; margin-top: 4px; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>🎹 Billentyűzet <span class="em">Zongora</span></h1>
+    <p class="subtitle">Játssz a számítógéped billentyűzetén — vagy kattints/érintsd a hangokat</p>
+  </header>
+
+  <section class="panel">
+    <div class="control">
+      <label>Hangszín</label>
+      <div class="presets" id="presets"></div>
+    </div>
+
+    <div class="control">
+      <label>Reverb (visszhang)</label>
+      <div class="slider-wrap">
+        <input type="range" id="reverb" min="0" max="100" value="25" />
+        <span class="value" id="reverbVal">25%</span>
+      </div>
+    </div>
+
+    <div class="control">
+      <label>Hangerő</label>
+      <div class="slider-wrap">
+        <input type="range" id="volume" min="0" max="100" value="70" />
+        <span class="value" id="volumeVal">70%</span>
+      </div>
+    </div>
+
+    <div class="control">
+      <label>Oktáv</label>
+      <div class="octave-ctrl">
+        <button class="oct-btn" id="octDown" title="Lejjebb (←)">−</button>
+        <span class="oct-display" id="octDisplay">alap</span>
+        <button class="oct-btn" id="octUp" title="Feljebb (→)">+</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="piano-scroll">
+    <div class="piano" id="piano"></div>
+  </div>
+
+  <footer>
+    <p>
+      A <strong>fehér</strong> billentyűk a középső soron (<kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> … <kbd>Ű</kbd>),
+      a <strong>fekete</strong> (módosított) hangok a felső soron (<kbd>W</kbd> <kbd>E</kbd> <kbd>T</kbd> <kbd>Z</kbd> <kbd>U</kbd> <kbd>O</kbd> <kbd>P</kbd> <kbd>Ő</kbd>).
+      Az <kbd>A</kbd> a C alaphang, a <kbd>W</kbd> a fölötte lévő félhang — pont mint a zongorán.
+    </p>
+    <p class="hint">Tipp: <kbd>←</kbd> / <kbd>→</kbd> oktávváltás. Egyszerre több billentyű is leüthető (polifónia).</p>
+  </footer>
+
+<script>
+(() => {
+  "use strict";
+
+  // --- Hangkiosztás: A=C alaphang, felfelé. Magyar QWERTZ billentyűzetre. ---
+  // Minden hang: { key (karakter), alt (alternatív karakterek), midi (eltolás C4-től), type }
+  const C4 = 60;
+  const NOTES = [
+    { key: 'a', midi: 0,  type: 'white' }, // C
+    { key: 'w', midi: 1,  type: 'black' }, // C#
+    { key: 's', midi: 2,  type: 'white' }, // D
+    { key: 'e', midi: 3,  type: 'black' }, // D#
+    { key: 'd', midi: 4,  type: 'white' }, // E
+    { key: 'f', midi: 5,  type: 'white' }, // F
+    { key: 't', midi: 6,  type: 'black' }, // F#
+    { key: 'g', midi: 7,  type: 'white' }, // G
+    { key: 'z', midi: 8,  type: 'black', alt: ['y'] }, // G#  (HU: z, US: y)
+    { key: 'h', midi: 9,  type: 'white' }, // A
+    { key: 'u', midi: 10, type: 'black' }, // A#
+    { key: 'j', midi: 11, type: 'white' }, // B
+    { key: 'k', midi: 12, type: 'white' }, // C
+    { key: 'o', midi: 13, type: 'black' }, // C#
+    { key: 'l', midi: 14, type: 'white' }, // D
+    { key: 'p', midi: 15, type: 'black' }, // D#
+    { key: 'é', midi: 16, type: 'white', alt: [';'] }, // E
+    { key: 'á', midi: 17, type: 'white', alt: ["'"] }, // F
+    { key: 'ő', midi: 18, type: 'black', alt: ['['] }, // F#
+    { key: 'ű', midi: 19, type: 'white', alt: [']', '\\'] }, // G
+  ];
+
+  const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  function noteName(midi) {
+    return NOTE_NAMES[((midi % 12) + 12) % 12] + (Math.floor(midi / 12) - 1);
+  }
+
+  // --- Hangszín-presetek ---
+  // partials: additív oszcillátorok; env: ADSR; filter: opcionális aluláteresztő; tremolo: opcionális
+  const PRESETS = {
+    piano: {
+      name: 'Klasszikus zongora',
+      partials: [
+        { type: 'triangle', ratio: 1,  gain: 1.0 },
+        { type: 'sine',     ratio: 2,  gain: 0.35 },
+        { type: 'sine',     ratio: 1,  gain: 0.5, detune: 4 },
+      ],
+      env: { a: 0.002, d: 1.6, s: 0.0, r: 0.35 },
+      filter: { freq: 4200, q: 0.6, envAmount: -2600, envTime: 1.2 },
+    },
+    epiano: {
+      name: 'Elektromos zongora',
+      partials: [
+        { type: 'sine',     ratio: 1,  gain: 1.0 },
+        { type: 'sine',     ratio: 3,  gain: 0.18 },
+        { type: 'triangle', ratio: 2,  gain: 0.12 },
+      ],
+      env: { a: 0.004, d: 1.8, s: 0.12, r: 0.5 },
+      tremolo: { rate: 5.2, depth: 0.18 },
+      filter: { freq: 3200, q: 0.7, envAmount: -1400, envTime: 1.0 },
+    },
+    organ: {
+      name: 'Orgona',
+      partials: [
+        { type: 'sine', ratio: 1,    gain: 0.9 },
+        { type: 'sine', ratio: 2,    gain: 0.5 },
+        { type: 'sine', ratio: 3,    gain: 0.35 },
+        { type: 'sine', ratio: 4,    gain: 0.22 },
+        { type: 'sine', ratio: 0.5,  gain: 0.3 },
+      ],
+      env: { a: 0.012, d: 0.05, s: 0.92, r: 0.12 },
+    },
+    synth: {
+      name: 'Szintetizátor',
+      partials: [
+        { type: 'sawtooth', ratio: 1, gain: 0.7 },
+        { type: 'sawtooth', ratio: 1, gain: 0.7, detune: -8 },
+        { type: 'sawtooth', ratio: 1, gain: 0.7, detune: 8 },
+      ],
+      env: { a: 0.02, d: 0.25, s: 0.6, r: 0.35 },
+      filter: { freq: 1800, q: 6, envAmount: 2600, envTime: 0.4 },
+    },
+    musicbox: {
+      name: 'Zenedoboz',
+      partials: [
+        { type: 'sine',     ratio: 2, gain: 1.0 },
+        { type: 'sine',     ratio: 4, gain: 0.3 },
+        { type: 'triangle', ratio: 1, gain: 0.25 },
+      ],
+      env: { a: 0.001, d: 0.7, s: 0.0, r: 0.25 },
+      filter: { freq: 6000, q: 1, envAmount: -2000, envTime: 0.5 },
+    },
+  };
+
+  // --- Audio gráf ---
+  let ctx = null;
+  let masterGain, dryGain, wetGain, convolver;
+  let currentPreset = 'piano';
+  let octaveShift = 0;
+  let masterVolume = 0.7;
+  let reverbAmount = 0.25;
+
+  function initAudio() {
+    if (ctx) return;
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+    masterGain = ctx.createGain();
+    masterGain.gain.value = masterVolume;
+
+    dryGain = ctx.createGain();
+    wetGain = ctx.createGain();
+    convolver = ctx.createConvolver();
+    convolver.buffer = makeReverbIR(2.6, 2.5);
+
+    // master -> dry -> out ; master -> convolver -> wet -> out
+    masterGain.connect(dryGain).connect(ctx.destination);
+    masterGain.connect(convolver);
+    convolver.connect(wetGain).connect(ctx.destination);
+
+    setReverb(reverbAmount);
+  }
+
+  function makeReverbIR(seconds, decay) {
+    const rate = (ctx || new AudioContext()).sampleRate;
+    const len = Math.floor(rate * seconds);
+    const buf = ctx.createBuffer(2, len, rate);
+    for (let ch = 0; ch < 2; ch++) {
+      const data = buf.getChannelData(ch);
+      for (let i = 0; i < len; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+      }
+    }
+    return buf;
+  }
+
+  function setReverb(v) {
+    reverbAmount = v;
+    if (!ctx) return;
+    wetGain.gain.setTargetAtTime(v * 0.9, ctx.currentTime, 0.02);
+    dryGain.gain.setTargetAtTime(1 - v * 0.35, ctx.currentTime, 0.02);
+  }
+
+  function midiToFreq(midi) {
+    return 440 * Math.pow(2, (midi - 69) / 12);
+  }
+
+  // --- Aktív hangok kezelése (polifónia) ---
+  const activeVoices = new Map(); // noteIndex -> voice
+
+  function startNote(noteIndex) {
+    initAudio();
+    if (ctx.state === 'suspended') ctx.resume();
+    if (activeVoices.has(noteIndex)) return;
+
+    const note = NOTES[noteIndex];
+    const preset = PRESETS[currentPreset];
+    const midi = C4 + note.midi + octaveShift * 12;
+    const freq = midiToFreq(midi);
+    const now = ctx.currentTime;
+    const env = preset.env;
+
+    const voiceGain = ctx.createGain();
+    let output = voiceGain;
+
+    // Opcionális aluláteresztő szűrő
+    let filter = null;
+    if (preset.filter) {
+      filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.Q.value = preset.filter.q;
+      const base = preset.filter.freq;
+      const target = Math.max(200, base + preset.filter.envAmount);
+      filter.frequency.setValueAtTime(base, now);
+      filter.frequency.linearRampToValueAtTime(target, now + preset.filter.envTime);
+      voiceGain.connect(filter);
+      output = filter;
+    }
+    output.connect(masterGain);
+
+    // ADSR a voiceGain-en
+    const peak = 0.32;
+    voiceGain.gain.setValueAtTime(0.0001, now);
+    voiceGain.gain.linearRampToValueAtTime(peak, now + env.a);
+    const sustainLevel = Math.max(0.0001, peak * env.s);
+    voiceGain.gain.setTargetAtTime(sustainLevel, now + env.a, env.d / 3 + 0.01);
+
+    // Oszcillátorok
+    const oscs = [];
+    for (const p of preset.partials) {
+      const osc = ctx.createOscillator();
+      osc.type = p.type;
+      osc.frequency.value = freq * p.ratio;
+      if (p.detune) osc.detune.value = p.detune;
+      const pg = ctx.createGain();
+      pg.gain.value = p.gain;
+      osc.connect(pg).connect(voiceGain);
+      osc.start(now);
+      oscs.push(osc);
+    }
+
+    // Opcionális tremolo (LFO a voiceGain-re)
+    let lfo = null, lfoGain = null;
+    if (preset.tremolo) {
+      lfo = ctx.createOscillator();
+      lfo.type = 'sine';
+      lfo.frequency.value = preset.tremolo.rate;
+      lfoGain = ctx.createGain();
+      lfoGain.gain.value = preset.tremolo.depth * peak;
+      lfo.connect(lfoGain).connect(voiceGain.gain);
+      lfo.start(now);
+    }
+
+    activeVoices.set(noteIndex, { oscs, voiceGain, lfo, env });
+    highlightKey(noteIndex, true);
+  }
+
+  function stopNote(noteIndex) {
+    const voice = activeVoices.get(noteIndex);
+    if (!voice) return;
+    activeVoices.delete(noteIndex);
+    const now = ctx.currentTime;
+    const r = voice.env.r;
+    voice.voiceGain.gain.cancelScheduledValues(now);
+    voice.voiceGain.gain.setValueAtTime(Math.max(0.0001, voice.voiceGain.gain.value), now);
+    voice.voiceGain.gain.setTargetAtTime(0.0001, now, r / 3 + 0.01);
+    const stopAt = now + r + 0.1;
+    voice.oscs.forEach(o => o.stop(stopAt));
+    if (voice.lfo) voice.lfo.stop(stopAt);
+    highlightKey(noteIndex, false);
+  }
+
+  // --- Zongora felépítése a DOM-ban ---
+  const piano = document.getElementById('piano');
+  const keyEls = []; // noteIndex -> element
+  const WHITE_W = 56;
+
+  function buildPiano() {
+    piano.innerHTML = '';
+    keyEls.length = 0;
+    // Először a fehér billentyűk folyamban, fekete billentyűk abszolút pozícióban
+    let whiteCount = 0;
+    NOTES.forEach((note, i) => {
+      const el = document.createElement('div');
+      el.className = note.type === 'white' ? 'white-key' : 'black-key';
+      el.dataset.index = i;
+      el.innerHTML = `<span class="key-label">${displayKey(note.key)}</span>` +
+                     `<span class="note-label">${NOTE_NAMES[((C4 + note.midi) % 12)]}</span>`;
+      if (note.type === 'white') {
+        piano.appendChild(el);
+        whiteCount++;
+      } else {
+        // a fekete billentyű az előző fehér jobb széléhez igazodik
+        el.style.left = (whiteCount * WHITE_W - 18) + 'px';
+        piano.appendChild(el);
+      }
+      keyEls[i] = el;
+
+      // Egér- és érintésvezérlés
+      el.addEventListener('mousedown', (ev) => { ev.preventDefault(); startNote(i); });
+      el.addEventListener('mouseup', () => stopNote(i));
+      el.addEventListener('mouseleave', () => stopNote(i));
+      el.addEventListener('touchstart', (ev) => { ev.preventDefault(); startNote(i); }, { passive: false });
+      el.addEventListener('touchend', (ev) => { ev.preventDefault(); stopNote(i); }, { passive: false });
+    });
+  }
+
+  function displayKey(k) {
+    return k.length === 1 ? k.toUpperCase() : k.toUpperCase();
+  }
+
+  function highlightKey(noteIndex, on) {
+    const el = keyEls[noteIndex];
+    if (el) el.classList.toggle('active', on);
+  }
+
+  // --- Billentyűzet -> hang leképezés ---
+  const keyToNote = new Map();
+  NOTES.forEach((note, i) => {
+    keyToNote.set(note.key, i);
+    (note.alt || []).forEach(a => keyToNote.set(a, i));
+  });
+
+  const pressed = new Set();
+  window.addEventListener('keydown', (e) => {
+    if (e.repeat) return;
+    if (e.key === 'ArrowLeft')  { e.preventDefault(); changeOctave(-1); return; }
+    if (e.key === 'ArrowRight') { e.preventDefault(); changeOctave(1);  return; }
+    const k = e.key.toLowerCase();
+    if (keyToNote.has(k) && !pressed.has(k)) {
+      pressed.add(k);
+      startNote(keyToNote.get(k));
+    }
+  });
+  window.addEventListener('keyup', (e) => {
+    const k = e.key.toLowerCase();
+    if (keyToNote.has(k)) {
+      pressed.delete(k);
+      stopNote(keyToNote.get(k));
+    }
+  });
+  // Ha elveszik a fókusz, minden hangot leállítunk
+  window.addEventListener('blur', () => {
+    pressed.clear();
+    [...activeVoices.keys()].forEach(stopNote);
+  });
+
+  // --- Vezérlők ---
+  const presetsEl = document.getElementById('presets');
+  Object.entries(PRESETS).forEach(([id, p]) => {
+    const btn = document.createElement('button');
+    btn.className = 'preset-btn' + (id === currentPreset ? ' active' : '');
+    btn.textContent = p.name;
+    btn.addEventListener('click', () => {
+      currentPreset = id;
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+    presetsEl.appendChild(btn);
+  });
+
+  const reverbSlider = document.getElementById('reverb');
+  const reverbVal = document.getElementById('reverbVal');
+  reverbSlider.addEventListener('input', () => {
+    reverbVal.textContent = reverbSlider.value + '%';
+    setReverb(reverbSlider.value / 100);
+  });
+
+  const volumeSlider = document.getElementById('volume');
+  const volumeVal = document.getElementById('volumeVal');
+  volumeSlider.addEventListener('input', () => {
+    volumeVal.textContent = volumeSlider.value + '%';
+    masterVolume = volumeSlider.value / 100;
+    if (masterGain) masterGain.gain.setTargetAtTime(masterVolume, ctx.currentTime, 0.02);
+  });
+
+  const octDisplay = document.getElementById('octDisplay');
+  function changeOctave(dir) {
+    octaveShift = Math.max(-3, Math.min(3, octaveShift + dir));
+    octDisplay.textContent = octaveShift === 0 ? 'alap' : (octaveShift > 0 ? '+' + octaveShift : '' + octaveShift);
+  }
+  document.getElementById('octDown').addEventListener('click', () => changeOctave(-1));
+  document.getElementById('octUp').addEventListener('click', () => changeOctave(1));
+
+  buildPiano();
+})();
+</script>
+</body>
+</html>
