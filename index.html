@@ -114,21 +114,24 @@
   .chord-row { display: flex; gap: 9px; align-items: center; }
   .row-label { width: 56px; text-align: right; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;
     opacity: 0.6; padding-right: 6px; }
-  .chord-cell { position: relative; width: 88px; height: 66px; border-radius: 10px; cursor: pointer;
+  .chord-cell { position: relative; width: 94px; height: 78px; border-radius: 10px; cursor: pointer;
     background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-left-width: 4px;
-    display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 1px;
+    display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 3px;
     transition: background 0.06s, transform 0.04s; user-select: none; -webkit-user-select: none; }
   .chord-cell:hover { background: rgba(255,255,255,0.12); }
   .chord-cell.active { background: var(--accent); transform: translateY(2px); }
-  .chord-cell.active .cell-name, .chord-cell.active .cell-key, .chord-cell.active .cell-variant { color: #1a1c2c; }
+  .chord-cell.active .cell-name, .chord-cell.active .cell-variant { color: #1a1c2c; }
   .row-maj  .chord-cell { border-left-color: #ffcb6b; }
   .row-min  .chord-cell { border-left-color: #82aaff; }
   .row-dom7 .chord-cell { border-left-color: #6ee7a0; }
   .row-maj7 .chord-cell { border-left-color: #e89aff; }
-  .cell-key { position: absolute; top: 4px; left: 7px; font-size: 11px; font-weight: 700; opacity: 0.5; }
-  .cell-name { font-size: 19px; font-weight: 700; }
+  /* a billentyű-felirat jól látható "gomb" felül, hogy egyértelmű legyen, mit kell nyomni */
+  .cell-key { font-size: 16px; font-weight: 800; line-height: 1; color: #1a1c2c; background: var(--accent2);
+    border-radius: 6px; padding: 3px 9px; box-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+  .chord-cell.active .cell-key { background: #1a1c2c; color: var(--accent); }
+  .cell-name { font-size: 18px; font-weight: 700; }
   .cell-variant { font-size: 11px; opacity: 0.4; }
-  body.shift-on .cell-name { opacity: 0.3; font-size: 15px; }
+  body.shift-on .cell-name { opacity: 0.3; font-size: 14px; }
   body.shift-on .cell-variant { opacity: 1; color: var(--accent2); font-weight: 700; font-size: 16px; }
   body.shift-on .chord-cell.active .cell-variant { color: #1a1c2c; }
 
@@ -313,12 +316,15 @@
     musicbox: { name: 'Zenedoboz',          sf: 'music_box',
       synth: { partials: [{type:'sine',ratio:2,gain:1},{type:'sine',ratio:4,gain:0.3},{type:'triangle',ratio:1,gain:0.25}],
                env:{a:0.001,d:0.7,s:0,r:0.25}, filter:{freq:6000,q:1,envAmount:-2000,envTime:0.5} } },
-    guitar_nylon: { name: 'Nylon gitár',     sf: 'acoustic_guitar_nylon',
-      synth: { partials: [{type:'triangle',ratio:1,gain:1},{type:'sine',ratio:2,gain:0.25},{type:'sawtooth',ratio:1,gain:0.12,detune:5}],
-               env:{a:0.004,d:1.6,s:0,r:0.3}, filter:{freq:3000,q:0.7,envAmount:-1800,envTime:1.0} } },
-    guitar_steel: { name: 'Acél gitár',      sf: 'acoustic_guitar_steel',
+    guitar_steel: { name: 'Acél gitár (country)', sf: 'acoustic_guitar_steel', soundfont: 'MusyngKite', group: 'guitar',
       synth: { partials: [{type:'sawtooth',ratio:1,gain:0.5},{type:'triangle',ratio:1,gain:0.7},{type:'sine',ratio:2,gain:0.3}],
                env:{a:0.003,d:1.8,s:0,r:0.3}, filter:{freq:3800,q:0.8,envAmount:-2200,envTime:1.1} } },
+    guitar_nylon: { name: 'Nylon gitár',     sf: 'acoustic_guitar_nylon', soundfont: 'MusyngKite', group: 'guitar',
+      synth: { partials: [{type:'triangle',ratio:1,gain:1},{type:'sine',ratio:2,gain:0.25},{type:'sawtooth',ratio:1,gain:0.12,detune:5}],
+               env:{a:0.004,d:1.6,s:0,r:0.3}, filter:{freq:3000,q:0.7,envAmount:-1800,envTime:1.0} } },
+    guitar_clean: { name: 'Tiszta elektromos', sf: 'electric_guitar_clean', soundfont: 'MusyngKite', group: 'guitar',
+      synth: { partials: [{type:'sawtooth',ratio:1,gain:0.6},{type:'triangle',ratio:1,gain:0.5},{type:'sine',ratio:3,gain:0.15}],
+               env:{a:0.004,d:2.0,s:0.05,r:0.35}, filter:{freq:3400,q:1.2,envAmount:-1600,envTime:1.2} } },
   };
 
   // =========================================================================
@@ -332,8 +338,10 @@
   let mode = 'piano';                                  // 'piano' | 'guitar'
   let onGuitarKeyDown = () => {}, onGuitarKeyUp = () => {}; // a Gitár modul állítja be
 
-  const instruments = {};       // sf név -> betöltött SoundFont hangszer
-  const loadingPromises = {};   // sf név -> betöltés Promise
+  const instruments = {};       // "soundfont/sf" kulcs -> betöltött hangszer
+  const loadingPromises = {};   // "soundfont/sf" kulcs -> betöltés Promise
+  function sfKeyOf(preset) { return (preset.soundfont || 'FluidR3_GM') + '/' + preset.sf; }
+  function instrOf(preset) { return instruments[sfKeyOf(preset)]; }
 
   function initAudio() {
     if (ctx) return;
@@ -344,7 +352,7 @@
     masterGain.connect(dryGain).connect(ctx.destination);
     masterGain.connect(convolver); convolver.connect(wetGain).connect(ctx.destination);
     setReverb(reverbAmount);
-    loadInstrument(PRESETS[currentPreset].sf); // alap hangszer előtöltése
+    loadInstrument(PRESETS[currentPreset]); // alap hangszer előtöltése
   }
 
   function makeReverbIR(seconds, decay) {
@@ -365,15 +373,16 @@
   }
 
   // SoundFont hangszer betöltése (cache-elve). Hiba esetén tartalék szintézisre váltunk.
-  function loadInstrument(name) {
-    if (instruments[name]) return Promise.resolve(instruments[name]);
-    if (loadingPromises[name]) return loadingPromises[name];
+  function loadInstrument(preset) {
+    const key = sfKeyOf(preset);
+    if (instruments[key]) return Promise.resolve(instruments[key]);
+    if (loadingPromises[key]) return loadingPromises[key];
     if (typeof Soundfont === 'undefined' || !ctx) { setLoadStatus('error'); return Promise.reject('nincs Soundfont'); }
     setLoadStatus('loading');
-    const p = Soundfont.instrument(ctx, name, { destination: masterGain, soundfont: 'FluidR3_GM', format: 'mp3' })
-      .then(inst => { instruments[name] = inst; if (PRESETS[currentPreset].sf === name) setLoadStatus('ok'); return inst; })
-      .catch(err => { loadingPromises[name] = null; setLoadStatus('error'); throw err; });
-    loadingPromises[name] = p;
+    const p = Soundfont.instrument(ctx, preset.sf, { destination: masterGain, soundfont: preset.soundfont || 'FluidR3_GM', format: 'mp3' })
+      .then(inst => { instruments[key] = inst; if (sfKeyOf(PRESETS[currentPreset]) === key) setLoadStatus('ok'); return inst; })
+      .catch(err => { loadingPromises[key] = null; setLoadStatus('error'); throw err; });
+    loadingPromises[key] = p;
     return p;
   }
 
@@ -392,14 +401,14 @@
 
     const midi = baseMidi + rel + octaveShift * 12;
     const preset = PRESETS[currentPreset];
-    const instr = instruments[preset.sf];
+    const instr = instrOf(preset);
 
     let voice;
     if (instr) {
       const node = instr.play(midi, ctx.currentTime, { gain: 2.2 });
       voice = { type: 'sf', node };
     } else {
-      loadInstrument(preset.sf).catch(() => {}); // töltsük be a háttérben
+      loadInstrument(preset).catch(() => {}); // töltsük be a háttérben
       voice = startSynthVoice(midi, preset.synth); // addig is tartalék hang
     }
     voices.set(uid, voice);
@@ -407,17 +416,20 @@
     if (teacherOnNote) teacherOnNote(uid);
   }
 
-  // Egyetlen hang lejátszása adott ideig (a Daltanító „Mutasd"/„Lejátszás" funkciójához).
+  // Egyetlen hang lejátszása. duration nélkül a hang természetesen kicseng
+  // (a gitár-akkordoknál ez kell, hogy két akkord egymásra csenghessen).
   function playMidi(midi, duration) {
     initAudio();
     if (ctx.state === 'suspended') ctx.resume();
     const preset = PRESETS[currentPreset];
-    const instr = instruments[preset.sf];
+    const instr = instrOf(preset);
     if (instr) {
-      instr.play(midi, ctx.currentTime, { gain: 2.2, duration });
+      const opts = { gain: 2.2 };
+      if (duration != null) opts.duration = duration;
+      instr.play(midi, ctx.currentTime, opts);
     } else {
       const v = startSynthVoice(midi, preset.synth);
-      setTimeout(() => releaseVoice(v), duration * 1000);
+      setTimeout(() => releaseVoice(v), (duration != null ? duration : 3.2) * 1000);
     }
   }
 
@@ -563,7 +575,7 @@
     currentPreset = id;
     Object.values(presetBtns).forEach(b => b.classList.remove('active'));
     if (presetBtns[id]) presetBtns[id].classList.add('active');
-    if (ctx) { if (instruments[PRESETS[id].sf]) setLoadStatus('ok'); else loadInstrument(PRESETS[id].sf).catch(() => {}); }
+    if (ctx) { if (instrOf(PRESETS[id])) setLoadStatus('ok'); else loadInstrument(PRESETS[id]).catch(() => {}); }
   }
   Object.entries(PRESETS).forEach(([id, p]) => {
     const btn = document.createElement('button');
@@ -764,7 +776,8 @@
       const def = shift ? VARIANT[CHORD[type].variant] : CHORD[type];
       let notes = def.intervals.map(i => root + i);
       if (strumDir === 'up') notes = notes.slice().reverse();
-      notes.forEach((m, i) => setTimeout(() => playMidi(m, 3.2), i * 22)); // pengetés: ~22 ms húronként
+      // duration nélkül: a húrok természetesen csengenek ki, így két akkord egymásra szólhat
+      notes.forEach((m, i) => setTimeout(() => playMidi(m), i * 22)); // pengetés: ~22 ms húronként
     }
 
     function flash(el) { el.classList.add('active'); setTimeout(() => el.classList.remove('active'), 130); }
@@ -830,12 +843,15 @@
     guitarModeEl.style.display = guitar ? '' : 'none';
     modePianoBtn.classList.toggle('active', !guitar);
     modeGuitarBtn.classList.toggle('active', guitar);
+    // a hangszín-választóban csak a módhoz illő hangszerek látszanak
+    Object.entries(presetBtns).forEach(([id, b]) => { b.style.display = ((PRESETS[id].group === 'guitar') === guitar) ? '' : 'none'; });
     [...voices.keys()].forEach(noteOff); // a zongora-hangok leállítása váltáskor
     if (guitar) { Guitar.ensureRendered(); if (!currentPreset.startsWith('guitar_')) setPreset('guitar_steel'); }
     else { if (currentPreset.startsWith('guitar_')) setPreset('piano'); }
   }
   modePianoBtn.addEventListener('click', () => setMode('piano'));
   modeGuitarBtn.addEventListener('click', () => setMode('guitar'));
+  setMode('piano'); // kiindulási állapot (a gitárhangok elrejtése a választóból)
 
   // A hangszer-minták betöltése az első billentyű- vagy egérinterakciókor indul
   // (a böngészők csak akkor engedik elindulni az AudioContextet).

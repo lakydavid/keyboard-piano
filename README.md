@@ -73,8 +73,10 @@ Beépített dalok (mind közismert / közkincs):
 ## 🎸 Gitár mód
 
 A fejléc alatti **🎹 Zongora / 🎸 Gitár** kapcsolóval válthatsz módot. Gitár módban
-**akusztikus gitár** hangzás (nylon vagy acél) szól, és **egy billentyű = egy teljes
-akkord**, gitárosan **pengetve** (a húrok kis késéssel egymás után szólalnak meg).
+**egy billentyű = egy teljes akkord**, gitárosan **pengetve** (a húrok kis késéssel
+egymás után szólalnak meg), és az akkordok **természetesen csengenek ki**, így két
+egymás utáni akkord egymásra szólhat. Három hangszín a választóban (a jobb minőségű
+**MusyngKite** mintákból): **Acél gitár (country)**, **Nylon gitár**, **Tiszta elektromos**.
 
 Az akkordok **mátrixban** vannak: a sorok az akkordtípust, az oszlopok a gyökhangot adják.
 
