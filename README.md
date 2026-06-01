@@ -56,6 +56,20 @@ regiszterben átfednek, így folyamatos skálát is játszhatsz a két kéz köz
 - **Oktávváltás** ±3 oktáv
 - Kattintható / érintőképernyőn is játszható (mobil/tablet)
 
+## Daltanító mód
+
+A felső panelen a **🎵 Daltanító** legördülőből választhatsz egy dalt, és a zongorán
+**zölden kivilágosodnak a lenyomandó billentyűk**. Ahogy lejátszod őket, magától lép a
+következő hangra/akkordra:
+
+- **🔊 Mutasd** — eljátssza neked az aktuális lépést
+- **▶ Lejátszás** — végigjátssza a teljes dalt demóként
+- **◀ / ▶** — lépkedés kézzel, **⟲ Újra** — elölről
+
+Beépített dalok (mind közismert / közkincs):
+**Csillag-dal**, **Örömóda** (Beethoven), **Happy Birthday**, és egy
+**négy-akkordos menet (C–G–Am–F)** — ez utóbbival rengeteg popdalt el lehet kísérni.
+
 ## Hogyan szól ilyen szépen?
 
 A hangszerek **valódi felvett mintái** (GM SoundFont) töltődnek be a
