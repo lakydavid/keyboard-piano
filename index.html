@@ -98,6 +98,40 @@
   .teacher #stepLabel { font-size: 30px; font-weight: 700; color: #6ee7a0; font-variant-numeric: tabular-nums; }
   .teacher .step-next { font-size: 15px; opacity: 0.45; }
   .tbtn-row { display: flex; gap: 8px; align-items: center; }
+  /* Mód-választó */
+  .mode-switch { display: flex; gap: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    padding: 5px; border-radius: 14px; }
+  .mode-btn { cursor: pointer; border: none; background: transparent; color: var(--text); padding: 9px 22px;
+    border-radius: 10px; font-size: 16px; transition: all 0.15s ease; }
+  .mode-btn.active { background: var(--accent); color: #1a1c2c; font-weight: 700; }
+
+  /* Gitár mód */
+  .guitar-bar { display: flex; flex-wrap: wrap; gap: 22px; align-items: flex-end; justify-content: center;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px;
+    padding: 14px 20px; margin-bottom: 16px; }
+  .guitar-hint { font-size: 12px; opacity: 0.6; max-width: 220px; }
+  .chord-grid { display: flex; flex-direction: column; gap: 9px; align-items: center; }
+  .chord-row { display: flex; gap: 9px; align-items: center; }
+  .row-label { width: 56px; text-align: right; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;
+    opacity: 0.6; padding-right: 6px; }
+  .chord-cell { position: relative; width: 88px; height: 66px; border-radius: 10px; cursor: pointer;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-left-width: 4px;
+    display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 1px;
+    transition: background 0.06s, transform 0.04s; user-select: none; -webkit-user-select: none; }
+  .chord-cell:hover { background: rgba(255,255,255,0.12); }
+  .chord-cell.active { background: var(--accent); transform: translateY(2px); }
+  .chord-cell.active .cell-name, .chord-cell.active .cell-key, .chord-cell.active .cell-variant { color: #1a1c2c; }
+  .row-maj  .chord-cell { border-left-color: #ffcb6b; }
+  .row-min  .chord-cell { border-left-color: #82aaff; }
+  .row-dom7 .chord-cell { border-left-color: #6ee7a0; }
+  .row-maj7 .chord-cell { border-left-color: #e89aff; }
+  .cell-key { position: absolute; top: 4px; left: 7px; font-size: 11px; font-weight: 700; opacity: 0.5; }
+  .cell-name { font-size: 19px; font-weight: 700; }
+  .cell-variant { font-size: 11px; opacity: 0.4; }
+  body.shift-on .cell-name { opacity: 0.3; font-size: 15px; }
+  body.shift-on .cell-variant { opacity: 1; color: var(--accent2); font-weight: 700; font-size: 16px; }
+  body.shift-on .chord-cell.active .cell-variant { color: #1a1c2c; }
+
   footer { max-width: 820px; text-align: center; font-size: 13px; line-height: 1.6; opacity: 0.72; }
   footer kbd { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
     border-radius: 4px; padding: 1px 6px; font-size: 12px; }
@@ -109,6 +143,11 @@
     <h1>🎹 Billentyűzet <span class="em">Zongora</span></h1>
     <p class="subtitle">Valódi hangszer-minták · kétkezes kiosztás · bal kéz basszus, jobb kéz dallam</p>
   </header>
+
+  <div class="mode-switch">
+    <button class="mode-btn active" id="modePiano">🎹 Zongora</button>
+    <button class="mode-btn" id="modeGuitar">🎸 Gitár</button>
+  </div>
 
   <section class="panel">
     <div class="control">
@@ -137,7 +176,8 @@
     </div>
   </section>
 
-  <section class="panel teacher">
+  <div id="pianoMode">
+  <section class="panel teacher" id="teacherSection">
     <div class="control">
       <label>🎵 Daltanító</label>
       <select id="songSelect">
@@ -168,6 +208,29 @@
   <div class="zone zone-bass">
     <div class="zone-title"><span class="dot"></span> Basszus · bal kéz · alsó sorok (ASDF + ÍYXCV)</div>
     <div class="piano-scroll"><div class="piano" id="pianoBass"></div></div>
+  </div>
+  </div><!-- /pianoMode -->
+
+  <div id="guitarMode" style="display:none">
+    <div class="guitar-bar">
+      <div class="control">
+        <label>Hangnem (capo)</label>
+        <div class="octave-ctrl">
+          <button class="oct-btn" id="capoDown" title="Félhanggal le">−</button>
+          <span class="oct-display" id="capoDisplay">C</span>
+          <button class="oct-btn" id="capoUp" title="Félhanggal fel">+</button>
+        </div>
+      </div>
+      <div class="control">
+        <label>Pengetés</label>
+        <div class="tbtn-row">
+          <button class="preset-btn active" id="strumDown" title="Lefelé pengetés">↓ le</button>
+          <button class="preset-btn" id="strumUp" title="Felfelé pengetés">↑ fel</button>
+        </div>
+      </div>
+      <div class="guitar-hint">Tartsd a <kbd>Shift</kbd>-et a <span id="variantNames">sus/m7/9/6</span> variánsokhoz</div>
+    </div>
+    <div class="chord-grid" id="chordGrid"></div>
   </div>
 
   <footer>
@@ -250,6 +313,12 @@
     musicbox: { name: 'Zenedoboz',          sf: 'music_box',
       synth: { partials: [{type:'sine',ratio:2,gain:1},{type:'sine',ratio:4,gain:0.3},{type:'triangle',ratio:1,gain:0.25}],
                env:{a:0.001,d:0.7,s:0,r:0.25}, filter:{freq:6000,q:1,envAmount:-2000,envTime:0.5} } },
+    guitar_nylon: { name: 'Nylon gitár',     sf: 'acoustic_guitar_nylon',
+      synth: { partials: [{type:'triangle',ratio:1,gain:1},{type:'sine',ratio:2,gain:0.25},{type:'sawtooth',ratio:1,gain:0.12,detune:5}],
+               env:{a:0.004,d:1.6,s:0,r:0.3}, filter:{freq:3000,q:0.7,envAmount:-1800,envTime:1.0} } },
+    guitar_steel: { name: 'Acél gitár',      sf: 'acoustic_guitar_steel',
+      synth: { partials: [{type:'sawtooth',ratio:1,gain:0.5},{type:'triangle',ratio:1,gain:0.7},{type:'sine',ratio:2,gain:0.3}],
+               env:{a:0.003,d:1.8,s:0,r:0.3}, filter:{freq:3800,q:0.8,envAmount:-2200,envTime:1.1} } },
   };
 
   // =========================================================================
@@ -260,6 +329,8 @@
   let octaveShift = 0;
   let masterVolume = 0.8;
   let reverbAmount = 0.28;
+  let mode = 'piano';                                  // 'piano' | 'guitar'
+  let onGuitarKeyDown = () => {}, onGuitarKeyUp = () => {}; // a Gitár modul állítja be
 
   const instruments = {};       // sf név -> betöltött SoundFont hangszer
   const loadingPromises = {};   // sf név -> betöltés Promise
@@ -452,6 +523,8 @@
   // =========================================================================
   const pressed = new Set();
   window.addEventListener('keydown', (e) => {
+    if (e.key === 'Shift') document.body.classList.add('shift-on'); // gitár: variáns-réteg
+    if (mode === 'guitar') { onGuitarKeyDown(e); return; }
     if (e.code === 'Space') { e.preventDefault(); if (!spaceHeld) { spaceHeld = true; updateSustain(); } return; }
     if (e.repeat) return;
     if (e.key === 'ArrowLeft')  { e.preventDefault(); changeOctave(-1); return; }
@@ -461,6 +534,8 @@
     if (note && !pressed.has(k)) { pressed.add(k); noteOn(note.uid, note.baseMidi, note.rel); }
   });
   window.addEventListener('keyup', (e) => {
+    if (e.key === 'Shift') document.body.classList.remove('shift-on');
+    if (mode === 'guitar') { onGuitarKeyUp(e); return; }
     if (e.code === 'Space') { spaceHeld = false; updateSustain(); return; }
     const k = e.key.toLowerCase();
     const note = charToNote.get(k);
@@ -468,6 +543,7 @@
   });
   window.addEventListener('blur', () => {
     pressed.clear(); [...voices.keys()].forEach(noteOff); spaceHeld = false; updateSustain();
+    document.body.classList.remove('shift-on');
   });
 
   // =========================================================================
@@ -482,16 +558,19 @@
     else if (state === 'error') loadStatusEl.textContent = '⚠️ szintetizált hang';
   }
 
+  const presetBtns = {};
+  function setPreset(id) {
+    currentPreset = id;
+    Object.values(presetBtns).forEach(b => b.classList.remove('active'));
+    if (presetBtns[id]) presetBtns[id].classList.add('active');
+    if (ctx) { if (instruments[PRESETS[id].sf]) setLoadStatus('ok'); else loadInstrument(PRESETS[id].sf).catch(() => {}); }
+  }
   Object.entries(PRESETS).forEach(([id, p]) => {
     const btn = document.createElement('button');
     btn.className = 'preset-btn' + (id === currentPreset ? ' active' : '');
     btn.textContent = p.name;
-    btn.addEventListener('click', () => {
-      currentPreset = id;
-      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      if (ctx) { if (instruments[p.sf]) setLoadStatus('ok'); else loadInstrument(p.sf).catch(() => {}); }
-    });
+    btn.addEventListener('click', () => setPreset(id));
+    presetBtns[id] = btn;
     presetsEl.appendChild(btn);
   });
 
@@ -642,6 +721,121 @@
 
     return {};
   })();
+
+  // =========================================================================
+  //  GITÁR MÓD — akkord-mátrix (sor = típus, oszlop = gyök), pengetéssel
+  // =========================================================================
+  const Guitar = (() => {
+    // gyök-billentyűk soronként (magyar QWERTZ); minden sor egy akkordtípus
+    const ROOT_KEYS = {
+      maj:  ['1','2','3','4','5','6','7'],
+      min:  ['q','w','e','r','t','z','u'],
+      dom7: ['a','s','d','f','g','h','j'],
+      maj7: ['í','y','x','c','v','b','n'],
+    };
+    const ROW_ORDER  = ['maj', 'min', 'dom7', 'maj7'];
+    const ROW_LABELS = { maj: 'dúr', min: 'moll', dom7: '7', maj7: 'maj7' };
+    const ROW_CLASS  = { maj: 'row-maj', min: 'row-min', dom7: 'row-dom7', maj7: 'row-maj7' };
+    const ROOT_MIDI  = [48, 50, 52, 53, 55, 57, 59]; // C D E F G A B (gitár-regiszter)
+
+    // akkordtípusok intervallumai + a Shift-variáns
+    const CHORD = {
+      maj:  { intervals: [0,4,7],     suffix: '',     variant: 'sus4' },
+      min:  { intervals: [0,3,7],     suffix: 'm',    variant: 'm7' },
+      dom7: { intervals: [0,4,7,10],  suffix: '7',    variant: '9' },
+      maj7: { intervals: [0,4,7,11],  suffix: 'maj7', variant: '6' },
+    };
+    const VARIANT = {
+      sus4: { intervals: [0,5,7],       suffix: 'sus4' },
+      m7:   { intervals: [0,3,7,10],    suffix: 'm7' },
+      '9':  { intervals: [0,4,7,10,14], suffix: '9' },
+      '6':  { intervals: [0,4,7,9],     suffix: '6' },
+    };
+
+    const chordGrid = document.getElementById('chordGrid');
+    const capoDisplay = document.getElementById('capoDisplay');
+    const cellMap = new Map(); // char -> { col, type, el }
+    let capo = 0, strumDir = 'down', rendered = false;
+
+    function rootName(midi) { return NOTE_NAMES[((midi % 12) + 12) % 12]; }
+
+    function playChord(col, type, shift) {
+      const root = ROOT_MIDI[col] + capo;
+      const def = shift ? VARIANT[CHORD[type].variant] : CHORD[type];
+      let notes = def.intervals.map(i => root + i);
+      if (strumDir === 'up') notes = notes.slice().reverse();
+      notes.forEach((m, i) => setTimeout(() => playMidi(m, 3.2), i * 22)); // pengetés: ~22 ms húronként
+    }
+
+    function flash(el) { el.classList.add('active'); setTimeout(() => el.classList.remove('active'), 130); }
+
+    function render() {
+      chordGrid.innerHTML = ''; cellMap.clear();
+      ROW_ORDER.forEach(type => {
+        const row = document.createElement('div'); row.className = 'chord-row ' + ROW_CLASS[type];
+        const lbl = document.createElement('div'); lbl.className = 'row-label'; lbl.textContent = ROW_LABELS[type];
+        row.appendChild(lbl);
+        ROOT_KEYS[type].forEach((ch, col) => {
+          const cell = document.createElement('div'); cell.className = 'chord-cell';
+          cell.innerHTML = `<span class="cell-key">${ch.toUpperCase()}</span><span class="cell-name"></span><span class="cell-variant"></span>`;
+          const fire = (ev) => { ev.preventDefault(); playChord(col, type, ev.shiftKey); flash(cell); };
+          cell.addEventListener('mousedown', fire);
+          cell.addEventListener('touchstart', fire, { passive: false });
+          cellMap.set(ch, { col, type, el: cell });
+          row.appendChild(cell);
+        });
+        chordGrid.appendChild(row);
+      });
+      updateNames();
+    }
+
+    function updateNames() {
+      cellMap.forEach((c) => {
+        const root = ROOT_MIDI[c.col] + capo, base = CHORD[c.type], v = VARIANT[base.variant];
+        c.el.querySelector('.cell-name').textContent = rootName(root) + base.suffix;
+        c.el.querySelector('.cell-variant').textContent = rootName(root) + v.suffix;
+      });
+      capoDisplay.textContent = rootName(ROOT_MIDI[0] + capo);
+    }
+
+    // billentyűzet (csak gitár módban hívódik)
+    onGuitarKeyDown = (e) => {
+      if (e.repeat) return;
+      const c = cellMap.get(e.key.toLowerCase());
+      if (c) { playChord(c.col, c.type, e.shiftKey); flash(c.el); }
+    };
+    onGuitarKeyUp = () => {}; // gitár: a húr magától cseng ki
+
+    function changeCapo(d) { capo = Math.max(-7, Math.min(7, capo + d)); updateNames(); }
+    document.getElementById('capoDown').addEventListener('click', () => changeCapo(-1));
+    document.getElementById('capoUp').addEventListener('click', () => changeCapo(1));
+    const strumDownBtn = document.getElementById('strumDown'), strumUpBtn = document.getElementById('strumUp');
+    strumDownBtn.addEventListener('click', () => { strumDir = 'down'; strumDownBtn.classList.add('active'); strumUpBtn.classList.remove('active'); });
+    strumUpBtn.addEventListener('click', () => { strumDir = 'up'; strumUpBtn.classList.add('active'); strumDownBtn.classList.remove('active'); });
+
+    return { ensureRendered() { if (!rendered) { render(); rendered = true; } } };
+  })();
+
+  // =========================================================================
+  //  MÓD-VÁLTÓ (zongora / gitár)
+  // =========================================================================
+  const pianoModeEl = document.getElementById('pianoMode');
+  const guitarModeEl = document.getElementById('guitarMode');
+  const modePianoBtn = document.getElementById('modePiano');
+  const modeGuitarBtn = document.getElementById('modeGuitar');
+  function setMode(m) {
+    mode = m;
+    const guitar = (m === 'guitar');
+    pianoModeEl.style.display = guitar ? 'none' : '';
+    guitarModeEl.style.display = guitar ? '' : 'none';
+    modePianoBtn.classList.toggle('active', !guitar);
+    modeGuitarBtn.classList.toggle('active', guitar);
+    [...voices.keys()].forEach(noteOff); // a zongora-hangok leállítása váltáskor
+    if (guitar) { Guitar.ensureRendered(); if (!currentPreset.startsWith('guitar_')) setPreset('guitar_steel'); }
+    else { if (currentPreset.startsWith('guitar_')) setPreset('piano'); }
+  }
+  modePianoBtn.addEventListener('click', () => setMode('piano'));
+  modeGuitarBtn.addEventListener('click', () => setMode('guitar'));
 
   // A hangszer-minták betöltése az első billentyű- vagy egérinterakciókor indul
   // (a böngészők csak akkor engedik elindulni az AudioContextet).

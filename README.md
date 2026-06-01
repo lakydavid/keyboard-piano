@@ -70,6 +70,34 @@ Beépített dalok (mind közismert / közkincs):
 **Csillag-dal**, **Örömóda** (Beethoven), **Happy Birthday**, és egy
 **négy-akkordos menet (C–G–Am–F)** — ez utóbbival rengeteg popdalt el lehet kísérni.
 
+## 🎸 Gitár mód
+
+A fejléc alatti **🎹 Zongora / 🎸 Gitár** kapcsolóval válthatsz módot. Gitár módban
+**akusztikus gitár** hangzás (nylon vagy acél) szól, és **egy billentyű = egy teljes
+akkord**, gitárosan **pengetve** (a húrok kis késéssel egymás után szólalnak meg).
+
+Az akkordok **mátrixban** vannak: a sorok az akkordtípust, az oszlopok a gyökhangot adják.
+
+```
+gyök:   C   D   E   F   G   A   B
+──────────────────────────────────
+dúr    1   2   3   4   5   6   7
+moll   Q   W   E   R   T   Z   U
+7      A   S   D   F   G   H   J
+maj7   Í   Y   X   C   V   B   N
+```
+
+- **„Fura" variánsok:** tartsd lenyomva a **`Shift`**-et — ekkor minden sor a rokon
+  variánsra vált: dúr→**sus4**, moll→**m7**, 7→**9**, maj7→**6**. A rácson is láthatóvá
+  válnak a variáns-nevek.
+- **Hangnem (capo):** a `−` / `+` gombokkal félhangonként transzponálhatod az egész
+  mátrixot, így bármilyen hangnemben kísérhetsz (pl. F#m, B♭ is elérhető).
+- **Pengetés iránya:** lefelé (↓) vagy felfelé (↑).
+- Egérrel/érintéssel a rács cellái is megnyomhatók.
+
+> 💡 Mivel egy billentyű egy egész akkordot ad, a gitár mód **nem érzékeny a
+> billentyűzet-ghostingra** — itt nem kell 3 billentyűt egyszerre lenyomni.
+
 ## Hogyan szól ilyen szépen?
 
 A hangszerek **valódi felvett mintái** (GM SoundFont) töltődnek be a
